@@ -1,6 +1,6 @@
 import { Driver, ReturningType } from "../Driver"
-import { ConnectionIsNotSetError } from "../../error/ConnectionIsNotSetError"
-import { DriverPackageNotInstalledError } from "../../error/DriverPackageNotInstalledError"
+import { ConnectionIsNotSetError } from "../../error"
+import { DriverPackageNotInstalledError } from "../../error"
 import { DriverUtils } from "../DriverUtils"
 import { CteCapabilities } from "../types/CteCapabilities"
 import { MysqlQueryRunner } from "./MysqlQueryRunner"
@@ -8,7 +8,7 @@ import { ObjectLiteral } from "../../common/ObjectLiteral"
 import { ColumnMetadata } from "../../metadata/ColumnMetadata"
 import { DateUtils } from "../../util/DateUtils"
 import { PlatformTools } from "../../platform/PlatformTools"
-import { DataSource } from "../../data-source/DataSource"
+import { DataSource } from "../../data-source"
 import { RdbmsSchemaBuilder } from "../../schema-builder/RdbmsSchemaBuilder"
 import { MysqlConnectionOptions } from "./MysqlConnectionOptions"
 import { MappedColumnTypes } from "../types/MappedColumnTypes"
@@ -348,7 +348,7 @@ export class MysqlDriver implements Driver {
             legacySpatialSupport: true,
             ...connection.options,
         } as MysqlConnectionOptions
-        this.isReplicated = this.options.replication ? true : false
+        this.isReplicated = !!this.options.replication
 
         // load mysql package
         this.loadDependencies()
@@ -670,7 +670,7 @@ export class MysqlDriver implements Driver {
             columnMetadata.type === "bool" ||
             columnMetadata.type === "boolean"
         ) {
-            value = value ? true : false
+            value = !!value
         } else if (
             columnMetadata.type === "datetime" ||
             columnMetadata.type === Date
@@ -1005,8 +1005,7 @@ export class MysqlDriver implements Driver {
             )
             if (!tableColumn) return false // we don't need new columns, we only need exist and changed
 
-            const isColumnChanged =
-                tableColumn.name !== columnMetadata.databaseName ||
+            return tableColumn.name !== columnMetadata.databaseName ||
                 this.isColumnDataTypeChanged(tableColumn, columnMetadata) ||
                 tableColumn.length !== this.getColumnLength(columnMetadata) ||
                 tableColumn.width !== columnMetadata.width ||
@@ -1019,7 +1018,7 @@ export class MysqlDriver implements Driver {
                 tableColumn.asExpression !== columnMetadata.asExpression ||
                 tableColumn.generatedType !== columnMetadata.generatedType ||
                 tableColumn.comment !==
-                    this.escapeComment(columnMetadata.comment) ||
+                this.escapeComment(columnMetadata.comment) ||
                 !this.compareDefaultValues(
                     this.normalizeDefault(columnMetadata),
                     tableColumn.default,
@@ -1031,104 +1030,13 @@ export class MysqlDriver implements Driver {
                         columnMetadata.enum.map((val) => val + ""),
                     )) ||
                 tableColumn.onUpdate !==
-                    this.normalizeDatetimeFunction(columnMetadata.onUpdate) ||
+                this.normalizeDatetimeFunction(columnMetadata.onUpdate) ||
                 tableColumn.isPrimary !== columnMetadata.isPrimary ||
                 !this.compareNullableValues(columnMetadata, tableColumn) ||
                 tableColumn.isUnique !==
-                    this.normalizeIsUnique(columnMetadata) ||
+                this.normalizeIsUnique(columnMetadata) ||
                 (columnMetadata.generationStrategy !== "uuid" &&
                     tableColumn.isGenerated !== columnMetadata.isGenerated)
-
-            // DEBUG SECTION
-            // if (isColumnChanged) {
-            //     console.log("table:", columnMetadata.entityMetadata.tableName)
-            //     console.log(
-            //         "name:",
-            //         tableColumn.name,
-            //         columnMetadata.databaseName,
-            //     )
-            //     console.log(
-            //         "type:",
-            //         tableColumn.type,
-            //         this.normalizeType(columnMetadata),
-            //     )
-            //     console.log(
-            //         "length:",
-            //         tableColumn.length,
-            //         columnMetadata.length,
-            //     )
-            //     console.log("width:", tableColumn.width, columnMetadata.width)
-            //     console.log(
-            //         "precision:",
-            //         tableColumn.precision,
-            //         columnMetadata.precision,
-            //     )
-            //     console.log("scale:", tableColumn.scale, columnMetadata.scale)
-            //     console.log(
-            //         "zerofill:",
-            //         tableColumn.zerofill,
-            //         columnMetadata.zerofill,
-            //     )
-            //     console.log(
-            //         "unsigned:",
-            //         tableColumn.unsigned,
-            //         columnMetadata.unsigned,
-            //     )
-            //     console.log(
-            //         "asExpression:",
-            //         tableColumn.asExpression,
-            //         columnMetadata.asExpression,
-            //     )
-            //     console.log(
-            //         "generatedType:",
-            //         tableColumn.generatedType,
-            //         columnMetadata.generatedType,
-            //     )
-            //     console.log(
-            //         "comment:",
-            //         tableColumn.comment,
-            //         this.escapeComment(columnMetadata.comment),
-            //     )
-            //     console.log(
-            //         "default:",
-            //         tableColumn.default,
-            //         this.normalizeDefault(columnMetadata),
-            //     )
-            //     console.log("enum:", tableColumn.enum, columnMetadata.enum)
-            //     console.log(
-            //         "default changed:",
-            //         !this.compareDefaultValues(
-            //             this.normalizeDefault(columnMetadata),
-            //             tableColumn.default,
-            //         ),
-            //     )
-            //     console.log(
-            //         "isPrimary:",
-            //         tableColumn.isPrimary,
-            //         columnMetadata.isPrimary,
-            //     )
-            //     console.log(
-            //         "isNullable changed:",
-            //         !this.compareNullableValues(columnMetadata, tableColumn),
-            //     )
-            //     console.log(
-            //         "isUnique:",
-            //         tableColumn.isUnique,
-            //         this.normalizeIsUnique(columnMetadata),
-            //     )
-            //     console.log(
-            //         "isGenerated:",
-            //         tableColumn.isGenerated,
-            //         columnMetadata.isGenerated,
-            //     )
-            //     console.log(
-            //         columnMetadata.generationStrategy !== "uuid" &&
-            //             tableColumn.isGenerated !== columnMetadata.isGenerated,
-            //     )
-            //     console.log("==========================================")
-            // }
-
-            return isColumnChanged
         })
     }
 
@@ -1168,16 +1076,14 @@ export class MysqlDriver implements Driver {
      * Loads all driver dependencies.
      */
     protected loadDependencies(): void {
-        const connectorPackage = this.options.connectorPackage ?? "mysql"
+        const connectorPackage = this.options.connectorPackage ?? (this.options.type === "mariadb" ? "mariadb" : "mysql")
         const fallbackConnectorPackage =
             connectorPackage === "mysql"
                 ? ("mysql2" as const)
                 : ("mysql" as const)
         try {
             // try to load first supported package
-            const mysql =
-                this.options.driver || PlatformTools.load(connectorPackage)
-            this.mysql = mysql
+            this.mysql = this.options.driver || PlatformTools.load(connectorPackage)
             /*
              * Some frameworks (such as Jest) may mess up Node's require cache and provide garbage for the 'mysql' module
              * if it was not installed. We check that the object we got actually contains something otherwise we treat

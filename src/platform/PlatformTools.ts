@@ -66,6 +66,9 @@ export class PlatformTools {
                 case "mysql2":
                     return require("mysql2")
 
+                case "mariadb":
+                    return require("mariadb/callback")
+
                 /**
                  * oracle
                  */
@@ -190,7 +193,7 @@ export class PlatformTools {
     /**
      * Loads a dotenv file into the environment variables.
      *
-     * @param path The file to load as a dotenv configuration
+     * @param pathStr The file to load as a dotenv configuration
      */
     static dotenv(pathStr: string): void {
         dotenv.config({ path: pathStr })
