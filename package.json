@@ -1,14 +1,10 @@
 {
-  "name": "typeorm",
-  "private": true,
+  "name": "@jonasbpa/typeorm",
+  "private": false,
   "version": "0.3.17",
   "description": "Data-Mapper ORM for TypeScript, ES7, ES6, ES5. Supports MySQL, PostgreSQL, MariaDB, SQLite, MS SQL Server, Oracle, MongoDB databases.",
   "license": "MIT",
-  "readmeFilename": "README.md",
-  "author": {
-    "name": "Umed Khudoiberdiev",
-    "email": "pleerock.me@gmail.com"
-  },
+  "author": "Umed Khudoiberdiev <pleerock.me@gmail.com>",
   "engines": {
     "node": ">= 12.9.0"
   },
@@ -66,10 +62,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/typeorm/typeorm.git"
+    "url": "git+https://github.com/jonasbpa/typeorm.git"
   },
   "bugs": {
     "url": "https://github.com/typeorm/typeorm/issues"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   },
   "homepage": "https://typeorm.io",
   "tags": [
@@ -236,7 +235,7 @@
     "test": "rimraf ./build && tsc && mocha --file ./build/compiled/test/utils/test-setup.js --bail --recursive --timeout 90000 ./build/compiled/test",
     "test-fast": "mocha --file ./build/compiled/test/utils/test-setup.js --bail --recursive --timeout 90000 ./build/compiled/test",
     "compile": "rimraf ./build && tsc",
-    "watch": "./node_modules/.bin/tsc -w",
+    "watch": "tsc -w",
     "package": "gulp package",
     "pack": "gulp pack",
     "lint": "prettier --check \"./src/**/*.ts\" \"./test/**/*.ts\" \"./sample/**/*.ts\"",
@@ -244,9 +243,9 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 2"
   },
   "bin": {
-    "typeorm": "./cli.js",
-    "typeorm-ts-node-commonjs": "./cli-ts-node-commonjs.js",
-    "typeorm-ts-node-esm": "./cli-ts-node-esm.js"
+    "typeorm": "cli.js",
+    "typeorm-ts-node-commonjs": "cli-ts-node-commonjs.js",
+    "typeorm-ts-node-esm": "cli-ts-node-esm.js"
   },
   "funding": "https://opencollective.com/typeorm",
   "collective": {
@@ -268,5 +267,9 @@
       "src/**"
     ],
     "reporter": "json"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "test"
   }
 }
